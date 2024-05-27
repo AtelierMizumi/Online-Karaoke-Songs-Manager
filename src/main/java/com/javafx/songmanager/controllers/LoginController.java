@@ -1,33 +1,133 @@
 package com.javafx.songmanager.controllers;
 
+import com.javafx.songmanager.utils.Validator;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.stage.Stage;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 
 public class LoginController {
 
     @FXML
     private PasswordField passwordTextField;
-
     @FXML
     private TextField usernameTextField;
+    @FXML
+    private Tooltip passwordShower = null;
 
     @FXML
     void initialize() {
     }
 
     @FXML
-    void loginOnAction(ActionEvent event) {
+    void loginOnAction(ActionEvent event) throws IOException {
+        String username = usernameTextField.getText();
+        String password = passwordTextField.getText();
+        if (validateLogin(username, password)) {
+            requestLogin(username, password);
+        }
+    }
 
+    @FXML
+    boolean validateLogin(String username, String password){
+        System.out.println("Validating credentials locally...");
+
+        if (!Validator.isValidUsername(username)) {
+            System.out.println("Invalid username");
+            return false;
+        } else if (!Validator.isValidPassword(password)) {
+            System.out.println("Invalid password");
+            return false;
+        }
+
+        return true;
+    };
+
+    void requestLogin(String username, String password) throws IOException {
+        System.out.println("Requesting login request to the server...");
+
+        try {
+            Socket socket = new Socket("localhost", 8080);
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            out.println("LOGIN " + username + " " + password);
+
+            String response = in.readLine();
+            // split the response
+            String[] parts = response.split(" ");
+
+            System.out.println("Server response: " + response);
+            if (parts[0].equals("LOGIN_OK")) {
+                // Registration successful
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Login successful");
+                alert.setHeaderText(null);
+                alert.setContentText("User login successful!");
+                alert.showAndWait();
+                switchToUserApp(parts[1]);
+            } else if ("LOGIN_FAILED USER_NON_EXIST".equals(response)) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Login Failed");
+                alert.setHeaderText(null);
+                alert.setContentText("User does not exist! Do you want to register?");
+                alert.showAndWait();
+                if (alert.getResult().getText().equals("OK")) {
+                    switchToRegisterOnAction(new ActionEvent());
+                }
+            } else if ("LOGIN_FAILED PASSWORD_INCORRECT".equals(response)) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Login Failed");
+                alert.setHeaderText(null);
+                alert.setContentText("Wrong password! Please try again.");
+                alert.showAndWait();
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Login Failed");
+                alert.setHeaderText(null);
+                alert.setContentText("User login failed!"+ '\n' + "Server response: " + response);
+                alert.showAndWait();
+            }
+
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void switchToUserApp(String sessionId) {
+        // Get the current stage
+        Stage stage = (Stage) usernameTextField.getScene().getWindow();
+
+        // Load the app view
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/javafx/songmanager/views/user-app.fxml"));
+            Parent root = loader.load();
+
+            // Get the AppController and set the sessionId
+            UserAppController appController = loader.getController();
+            appController.setSessionId(sessionId);
+
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -47,11 +147,26 @@ public class LoginController {
         }
     }
 
-
-
     @FXML
     void showPassword(ActionEvent event) {
+        if (passwordShower != null) {
+            passwordShower.hide();
+        }
 
+        Tooltip passwordToolTip = new Tooltip();
+        passwordToolTip.setText(passwordTextField.getText());
+
+        Point2D point = passwordTextField.localToScreen(0, 0);
+        double x = point.getX();
+        double y = point.getY() + passwordTextField.getHeight();
+        passwordToolTip.show(passwordTextField, x, y);
+        passwordShower = passwordToolTip; // Add this line
+
+        passwordTextField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                passwordToolTip.hide();
+            }
+        });
     }
 
 }

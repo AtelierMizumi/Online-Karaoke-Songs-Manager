@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import java.net.URL?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.text.Font?>
+
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="540.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.javafx.songmanager.controllers.UserAppController">
+   <children>
+      <AnchorPane prefHeight="200.0" prefWidth="200.0">
+         <children>
+            <BorderPane layoutX="14.0" layoutY="14.0" prefHeight="540.0" prefWidth="1100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <left>
+                  <AnchorPane prefHeight="200.0" prefWidth="200.0" styleClass="nav-form" stylesheets="@../assets/styles/default.css" BorderPane.alignment="CENTER">
+                     <children>
+                        <AnchorPane prefHeight="160.0" prefWidth="202.0">
+                           <children>
+                              <Line endX="72.0" layoutX="99.0" layoutY="147.0" startX="-72.0" />
+                              <Label alignment="CENTER" layoutX="61.0" layoutY="87.0" prefHeight="18.0" prefWidth="74.0" stylesheets="@default.css" text="Welcome !" textAlignment="CENTER" textFill="#cad3f5">
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </Label>
+                              <Label alignment="CENTER" contentDisplay="CENTER" layoutX="76.0" layoutY="105.0" stylesheets="@default.css" textAlignment="CENTER" textFill="#a6da95">
+                                 <font>
+                                    <Font name="Tahoma Bold" size="16.0" />
+                                 </font>
+                              </Label>
+                              <FontAwesomeIconView fill="#1e2030" glyphName="MUSIC" layoutX="74.0" layoutY="69.0" selectionStart="20" size="64" />
+                           </children>
+                        </AnchorPane>
+                        <Button fx:id="logoutButton" layoutX="107.0" layoutY="499.0" mnemonicParsing="false" onAction="#logoutButtonOnAction" prefHeight="26.0" prefWidth="80.0" styleClass="nav-button" stylesheets="@default.css" text="Logout">
+                           <graphic>
+                           </graphic>
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font>
+                           <graphic>
+                              <FontAwesomeIconView fill="WHITE" glyphName="USER" />
+                           </graphic>
+                        </Button>
+                        <Button fx:id="exitButton" layoutX="14.0" layoutY="499.0" mnemonicParsing="false" onAction="#exitButtonOnAction" prefHeight="26.0" prefWidth="80.0" styleClass="nav-button" stylesheets="@default.css" text="Exit">
+                           <graphic>
+                           </graphic>
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font>
+                           <graphic>
+                              <FontAwesomeIconView fill="WHITE" glyphName="BED" />
+                           </graphic>
+                        </Button>
+                        <Separator layoutX="200.0" orientation="VERTICAL" prefHeight="540.0" prefWidth="4.0" />
+                        <Button fx:id="viewButton" layoutX="55.0" layoutY="173.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="92.0" styleClass="nav-button" stylesheets="@default.css" text="View">
+                           <graphic>
+                           </graphic>
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font>
+                           <graphic>
+                              <FontAwesomeIconView fill="WHITE" glyphName="TABLE" />
+                           </graphic>
+                        </Button>
+                     </children>
+                  </AnchorPane>
+               </left>
+               <center>
+                  <AnchorPane prefHeight="200.0" prefWidth="200.0" stylesheets="@default.css" BorderPane.alignment="CENTER">
+                     <children>
+                        <AnchorPane fx:id="viewTab" prefHeight="542.0" prefWidth="892.0" styleClass="anchor-pane-style" stylesheets="@../assets/styles/default.css">
+                           <children>
+                              <AnchorPane layoutX="14.0" layoutY="67.0" prefHeight="460.0" prefWidth="860.0" styleClass="shadow-effect">
+                                 <children>
+                                    <TableView fx:id="viewTable" layoutX="3.2" layoutY="6.4" prefHeight="460.0" prefWidth="860.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                      <columns>
+                                        <TableColumn fx:id="viewIDCol" editable="false" text="ID" />
+                                        <TableColumn fx:id="viewTitleCol" editable="false" prefWidth="275.0" text="Title" />
+                                          <TableColumn fx:id="viewAlbumCol" editable="false" minWidth="0.0" prefWidth="250.0" text="Album" />
+                                          <TableColumn fx:id="viewArtistCol" editable="false" prefWidth="160.0" text="Artist" />
+                                          <TableColumn fx:id="viewLengthCol" editable="false" prefWidth="90.0" text="Length" />
+                                      </columns>
+                                    </TableView>
+                                 </children>
+                                 <stylesheets>
+                                    <URL value="@default.css" />
+                                    <URL value="@../assets/styles/default.css" />
+                                 </stylesheets>
+                              </AnchorPane>
+                              <TextField fx:id="searchBar" layoutX="14.0" layoutY="14.0" prefHeight="32.0" prefWidth="320.0" promptText="Search" />
+                           </children>
+                        </AnchorPane>
+                     </children>
+                  </AnchorPane>
+               </center>
+            </BorderPane>
+         </children>
+      </AnchorPane>
+   </children>
+</StackPane>

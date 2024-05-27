@@ -7,6 +7,7 @@ import org.hibernate.SessionFactory;
 import org.mindrot.jbcrypt.BCrypt;
 
 import javax.persistence.Persistence;
+import javax.persistence.Query;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -117,18 +118,26 @@ public class SongManagerServer {
         String username = parts[1];
         String password = parts[2];
 
+        // logic to query user's information
         Session session = sessionFactory.getCurrentSession();
-        UserInfo userInfo = session.get(UserInfo.class, username);
-        String salt = userInfo.getPassword_salt();
-
         session.beginTransaction();
-        if (userInfo != null && userInfo.getHashed_password().equals(password)) {
-            String sessionId = "session" + System.currentTimeMillis();
-            writer.println("LOGIN_OK " + sessionId);
-        } else {
-            writer.println("LOGIN_FAIL");
-        }
+        Query query = session.createQuery("FROM UserInfo WHERE username = :username");
+        query.setParameter("username", username);
+        UserInfo userInfo = (UserInfo) query.getSingleResult();
         session.getTransaction().commit();
+        session.close();
+
+        if (userInfo != null) {
+                if (BCrypt.checkpw(password, userInfo.getHashed_password())) {
+                    String sessionId = generateSessionId(userInfo);
+                    writer.println("LOGIN_OK " + sessionId);
+            } else {
+                writer.println("LOGIN_FAILED PASSWORD_INCORRECT");
+            }
+        } else {
+            writer.println("LOGIN_FAILED USER_NON_EXIST");
+        }
+
     }
 
     private void handleCreateSong(String[] parts, PrintWriter writer) {
@@ -149,7 +158,7 @@ public class SongManagerServer {
 
             writer.println("CREATE_SONG_OK");
         } else {
-            writer.println("CREATE_SONG_FAIL");
+            writer.println("CREATE_SONG_FAIL " + sessionId);
         }
     }
 

@@ -4,6 +4,7 @@ import com.javafx.songmanager.utils.Validator;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -28,6 +29,9 @@ public class RegisterController {
     private TextField usernameTextField;
     @FXML
     private TextField userEmailTextField;
+    @FXML
+    private Tooltip passwordShower = null;
+
 
     @FXML
     void initialize() {
@@ -35,10 +39,11 @@ public class RegisterController {
 
     @FXML
     void registerOnAction(ActionEvent event) {
-        if (validateRegister(event)) {
-            String email = userEmailTextField.getText();
-            String username = usernameTextField.getText();
-            String password = passwordTextField.getText();
+        String email = userEmailTextField.getText();
+        String username = usernameTextField.getText();
+        String password = passwordTextField.getText();
+        String confirmPassword = confirmPasswordTextField.getText();
+        if (validateRegister(email, username, password, confirmPassword)) {
             requestAccountCreation(email, username, password);
         }
     }
@@ -60,12 +65,8 @@ public class RegisterController {
     }
 
     @FXML
-    boolean validateRegister(ActionEvent event) {
+    boolean validateRegister(String email, String username, String password, String confirmPassword) {
         System.out.println("Validating registration...");
-        String email = userEmailTextField.getText();
-        String username = usernameTextField.getText();
-        String password = passwordTextField.getText();
-        String confirmPassword = confirmPasswordTextField.getText();
 
         if (!Validator.isValidEmail(email)) {
             showAlert("Invalid Email", "Please enter a valid email address.");
@@ -111,13 +112,13 @@ public class RegisterController {
                 alert.setContentText("User registered successfully!");
                 alert.showAndWait();
 
-                switchToApp();
+                switchToUserApp();
             } else {
                 // Registration failed
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Registration Failed");
                 alert.setHeaderText(null);
-                alert.setContentText("User registration failed!");
+                alert.setContentText("User registration failed!"+ '\n' + "Server response: " + response);
                 alert.showAndWait();
             }
 
@@ -129,21 +130,34 @@ public class RegisterController {
 
     @FXML
     void showPassword(ActionEvent event) {
-        String password = passwordTextField.getText();
-        Tooltip tooltip = new Tooltip(password);
-        Tooltip.install(passwordTextField, tooltip);
+        if (passwordShower != null) {
+            passwordShower.hide();
+        }
 
-        passwordTextField.setOnMouseExited(e -> tooltip.hide());
+        Tooltip passwordToolTip = new Tooltip();
+        passwordToolTip.setText(passwordTextField.getText());
+
+        Point2D point = passwordTextField.localToScreen(0, 0);
+        double x = point.getX();
+        double y = point.getY() + passwordTextField.getHeight();
+        passwordToolTip.show(passwordTextField, x, y);
+        passwordShower = passwordToolTip; // Add this line
+
+        passwordTextField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                passwordToolTip.hide();
+            }
+        });
     }
 
     @FXML
-    void switchToApp() {
+    void switchToUserApp() {
         // Close the current stage
         Stage stage = (Stage) usernameTextField.getScene().getWindow();
         stage.close();
         // Open the app stage
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/javafx/songmanager/views/app-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/javafx/songmanager/views/user-app.fxml"));
             Parent root = loader.load();
             Scene scene = new Scene(root);
             stage.setScene(scene);

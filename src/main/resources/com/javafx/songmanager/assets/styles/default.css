@@ -1,0 +1,52 @@
+/*
+General Style Sheet for the application
+Theme: Catppuccin Macchiato (https://github.com/catppuccin/catppuccin)
+*/
+
+.anchor-pane-style {
+    -fx-background-color: linear-gradient(to bottom right, #363a4f, #24273a);
+}
+
+.top-form {
+    -fx-background-color: #f2f2f2;
+    -fx-border-color: #000;
+}
+
+.semi-top-form {
+    -fx-background-color: #f2f2f2;
+    -fx-border-color: #000;
+}
+
+.bottom-form {
+    -fx-background-color: #f2f2f2;
+    -fx-border-color: #000;
+}
+
+.right-form {
+    -fx-background-color: #f2f2f2;
+    -fx-border-color: #000;
+}
+
+.left-form {
+    -fx-background-color: #f2f2f2;
+    -fx-border-color: #000;
+}
+
+.nav-form {
+    -fx-background-color: linear-gradient(to bottom right, #363a4f, #24273a);
+    -fx-border-color: #181926;
+    -fx-text-fill: #cad3f5;
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: #cad3f5;
+    -fx-cursor: hand;
+    -fx-text-alignment: left;
+    -fx-alignment: center-left;
+}
+
+.shadow-effect {
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.6), 10, 0, 0, 0);
+}
