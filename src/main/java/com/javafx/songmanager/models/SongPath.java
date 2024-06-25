@@ -10,6 +10,12 @@ public class SongPath {
 
     private String path;
 
+    public SongPath() {}
+    public SongPath(int songId, String newFilePath) {
+        this.id = songId;
+        this.path = newFilePath;
+    }
+
     public int getId() {
         return id;
     }

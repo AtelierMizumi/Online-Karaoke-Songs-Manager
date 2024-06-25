@@ -19,14 +19,15 @@ import javafx.stage.FileChooser;
 
 import java.io.*;
 import java.net.Socket;
-import java.sql.SQLException;
-import java.util.List;
 
 import javafx.stage.Stage;
 import org.apache.commons.lang3.SystemUtils;
+
 import java.awt.Desktop;
+import java.util.UUID;
 
 public class AdminAppController {
+    private final String cacheDirectory = "clientCache";
     private String clientSessionId;
     private ObservableList<Song> SONGLIST = FXCollections.observableArrayList();
 
@@ -133,7 +134,7 @@ public class AdminAppController {
     @FXML
     private AnchorPane viewTab;
 
-    public void initialize() {
+    public void initialize() throws IOException {
         System.out.println("Initializing AdminAppController...");
         System.out.println("SessionId:" + clientSessionId);
         requestSongList(clientSessionId);
@@ -151,42 +152,7 @@ public class AdminAppController {
                 Song selectedSong = viewTable.getSelectionModel().getSelectedItem();
                 if (selectedSong != null) {
                     try {
-                        // Create a socket and connect to the server
-                        Socket socket = new Socket("localhost", 8080);
-                        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-                        // Send a request to the server to get the media file
-                        out.println("GET_MEDIA|" + clientSessionId + "|" + selectedSong.getId());
-
-                        // Read the response from the server
-                        String response = in.readLine();
-
-                        if (response.startsWith("GET_MEDIA_SUCCESS")) {
-                            // The response contains the path to the media file on the client's system
-                            String audioFilePath = response.substring(18);
-
-                            // Play the audio file
-                            if (SystemUtils.IS_OS_WINDOWS) {
-                                System.out.println("Playing: " + audioFilePath);
-                                Desktop.getDesktop().open(new File(audioFilePath));
-                            } else if (SystemUtils.IS_OS_MAC) {
-                                System.out.println("Playing: " + audioFilePath);
-                                ProcessBuilder pb = new ProcessBuilder("open", audioFilePath);
-                                pb.start();
-                            } else if (SystemUtils.IS_OS_LINUX){
-                                System.out.println("Playing: " + audioFilePath + " with xdg-open");
-                                ProcessBuilder pb = new ProcessBuilder("xdg-open", audioFilePath);
-                                pb.start();
-                            }
-                        } else if ("NO_MEDIA_FOUND".equals(response)) {
-                            System.out.println("No media found for the selected song");
-                            promptAlert("No Media Found", "No media found for the selected song");
-                        }
-                        else {
-                            System.out.println("Failed to get media: " + response);
-                            promptAlert("Failed to Get Media", "Failed to get media: " + response);
-                        }
+                        playMedia(selectedSong);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -300,6 +266,7 @@ public class AdminAppController {
                 editTitleTextField.setText(selectedSong.getTitle());
                 editArtistTextField.setText(selectedSong.getArtist());
                 editAlbumTextField.setText(selectedSong.getAlbum());
+                editYearTextField.setText(selectedSong.getReleaseYear());
             } else {
                 System.out.println("New selection is null"); // Debugging line
             }
@@ -317,24 +284,147 @@ public class AdminAppController {
         System.out.println("All tables initialized. Current session id: " + clientSessionId);
     }
 
+    private void playMedia(Song selectedSong) throws IOException {
+        String directoryName = cacheDirectory + "/Songs";
+        File directory = new File(directoryName);
+        if (!directory.exists()) {
+            // Create the directory
+            boolean isCreated = directory.mkdir();
+            if (isCreated) {
+                System.out.println("Directory created successfully.");
+            } else {
+                System.out.println("Failed to create the directory.");
+            }
+        } else { System.out.println("Directory already exists."); }
+
+        Socket clientSocket = new Socket("localhost", 8080);
+        PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        writer.println("GET_MEDIA|" + clientSessionId + "|" + selectedSong.getId());
+
+
+        String[] parts = reader.readLine().split("\\|", -1);
+        System.out.println("Server response: " + parts[0] + " " + parts[1] + " " + parts[2]);
+        if ("GET_MEDIA_FAIL".equals(parts[0])) {
+            System.out.println("Failed to get media");
+        } else if ("NO_MEDIA_FOUND".equals(parts[0])) {
+            System.out.println("No media found");
+        } else {
+            String songName = parts[1];
+            String fileExtension = parts[2];
+
+            String newFilePath = songName + "." + fileExtension;
+            DataInputStream din = new DataInputStream(clientSocket.getInputStream());
+            DataOutputStream dout = new DataOutputStream(clientSocket.getOutputStream());
+
+            writer.println("LISTENING_FOR_MEDIA");
+
+            try {
+                int bytes = 0;
+                FileOutputStream fileOutputStream
+                        = new FileOutputStream(directoryName + "/" + newFilePath);
+
+                long size
+                        = din.readLong(); // read file size
+                System.out.println("File size: " + size);
+                byte[] buffer = new byte[4 * 1024];
+                while (size > 0
+                        && (bytes = din.read(
+                        buffer, 0,
+                        (int)Math.min(buffer.length, size)))
+                        != -1) {
+                    // Here we write the file using write method
+                    fileOutputStream.write(buffer, 0, bytes);
+                    size -= bytes; // read upto file size
+                }
+                // Here we received file
+                System.out.println("File is Received");
+                fileOutputStream.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            System.out.println("Media uploaded successfully");
+            din.close();
+            dout.close();
+            if (SystemUtils.IS_OS_WINDOWS) {
+                try {
+                    System.out.println("Playing: " + directoryName + "/" + newFilePath);
+                    Desktop.getDesktop().open(new File(cacheDirectory + "/" + "Songs" + "/" + newFilePath));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            } else if (SystemUtils.IS_OS_MAC) {
+                System.out.println("Playing: " + directoryName + "/" + newFilePath);
+                ProcessBuilder pb = new ProcessBuilder("open", cacheDirectory + "/" + "Songs" + "/" + newFilePath);
+                try {
+                    pb.start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else if (SystemUtils.IS_OS_LINUX){
+                System.out.println("Playing: " + directoryName + "/" + newFilePath + " with xdg-open");
+                ProcessBuilder pb = new ProcessBuilder("xdg-open", cacheDirectory + "/" + "Songs" + "/" + newFilePath);
+                try {
+                    pb.start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     @FXML
     public void editTabEditButtonOnAction(ActionEvent event) {
-        Song selectedSong = previewEditTable.getSelectionModel().getSelectedItem();
-        if (selectedSong != null) {
-            String idAsString = Integer.toString(selectedSong.getId());
-            String title = editTitleTextField.getText();
-            String artist = editArtistTextField.getText();
-            String album = editAlbumTextField.getText();
-            String year = editYearTextField.getText();
-
+        try {
+            String title = editTitleTextField.getText().trim();
+            String album = editAlbumTextField.getText().trim();
+            String artist = editArtistTextField.getText().trim();
+            String year = editYearTextField.getText().trim();
+            String audioFilePath = editSongPathTextField.getText().trim();
+            // get selected song
+            Song selectedSong = previewEditTable.getSelectionModel().getSelectedItem();
+            if (selectedSong == null) {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Please select a song to edit.", ButtonType.OK);
+                alert.showAndWait();
+                return;
+            }
             // Validate title
             if (title == null || title.trim().isEmpty()) {
                 Alert alert = new Alert(Alert.AlertType.ERROR, "Title cannot be empty.", ButtonType.OK);
                 alert.showAndWait();
                 return;
             }
+            // request song creation to the server
+            try {
+                Socket socket = new Socket("localhost", 8080);
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            requestSongList(clientSessionId);
+                out.println("UPDATE_SONG|" + clientSessionId + "|" + selectedSong.getId()+ "|" + title + "|" + artist + "|" + album + "|" + year);
+
+                String response = in.readLine();
+                System.out.println("Received response: " + response);
+
+                String[] parts = response.split("\\|", -1);
+                if (parts[0].equals("UPDATE_SONG_OK")) {
+                    System.out.println("Song updated successfully. Uploading media...");
+                    requestSongList(clientSessionId);
+                    if (!audioFilePath.isEmpty()) {
+                        uploadSongMedia(selectedSong.getId(), audioFilePath);
+                    } else {
+                        System.out.println("No audio file selected. Skipping media upload.");
+                    }
+                } else if ("UPDATE_SONG_FAIL|INVALID_SESSION".equals(response)) {
+                    System.out.println("Invalid session id");
+                } else {
+                    System.out.println("Failed to update song");
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -385,9 +475,11 @@ public class AdminAppController {
             e.printStackTrace();
         }
     }
+
+
     @FXML
     void editTabUploadAudioButtonOnAction(ActionEvent event) {
-
+        getMediaPath(editSongPathTextField);
     }
 
     private String getAudioFromFileChooser() {
@@ -405,26 +497,60 @@ public class AdminAppController {
             return null;
         }
     }
-    public void uploadSongMedia(int songId, String mediaFilePath) {
-        try {
-            Socket socket = new Socket("localhost", 8080);
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            out.println("UPLOAD_SONG_MEDIA " + songId);
+    public void uploadSongMedia(int songId, String mediaFilePath) throws IOException {
+        Socket socket = new Socket("localhost", 8080);
+        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            // Send the file
-            File file = new File(mediaFilePath);
-            byte[] bytes = new byte[(int) file.length()];
-            FileInputStream fis = new FileInputStream(file);
-            BufferedInputStream bis = new BufferedInputStream(fis);
-            bis.read(bytes, 0, bytes.length);
-            OutputStream os = socket.getOutputStream();
-            os.write(bytes, 0, bytes.length);
-            os.flush();
-            socket.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        String fileExtension = getFileExtension(mediaFilePath);
+        out.println("ADD_SONG_MEDIA_TO_ID|" + clientSessionId + "|" + songId + "|" + fileExtension);
+
+        String response = in.readLine();
+        System.out.println("Received response: " + response);
+        if ("LISTENING_FOR_MEDIA".equals(response)) {
+            System.out.println("Server is ready to receive media. Sending...");
+
+            try {
+                DataInputStream din = new DataInputStream(socket.getInputStream());
+                DataOutputStream dout = new DataOutputStream(socket.getOutputStream());
+                System.out.println("Sending media file: " + mediaFilePath);
+                int bytes = 0;
+                File file = new File(mediaFilePath);
+                FileInputStream fileInputStream = new FileInputStream(file);
+
+                dout.writeLong(file.length());
+                // Here we  break file into chunks
+                byte[] buffer = new byte[4 * 1024];
+                while ((bytes = fileInputStream.read(buffer))
+                        != -1) {
+                    dout.write(buffer, 0, bytes);
+                    dout.flush();
+                }
+                fileInputStream.close();
+
+                response = in.readLine();
+                dout.close();
+                din.close();
+
+                if ("UPLOAD_SONG_MEDIA_SUCCESS".equals(response)) {
+                    System.out.println("Media uploaded successfully");
+                } else {
+                    System.out.println("Failed to upload media");
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            System.out.println("Failed to upload media");
+            return;
         }
     }
+
+    private String getFileExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        return (dotIndex == -1) ? "" : fileName.substring(dotIndex + 1);
+    }
+
     @FXML
     void exitButtonOnAction(ActionEvent event) {
         System.exit(0);
@@ -499,7 +625,7 @@ public class AdminAppController {
 
             if (selectedFile != null) {
                 String audioFilePath = selectedFile.getAbsolutePath();
-                addTabAudioPath.setText(audioFilePath);
+                AudioPath.setText(audioFilePath);
             } else {
                 System.out.println("No file selected");
             }
@@ -531,7 +657,6 @@ public class AdminAppController {
                         System.out.println("Server response: " + response);
                         // split the response
                         String[] parts = response.split("\\|", -1);
-                        System.out.println(parts[0] + " " + parts[1] + " " + parts[2] + " " + parts[3] + " " + parts[4]);
                         Song song = new Song(Integer.parseInt(parts[0]), parts[1], parts[2], parts[3], parts[4]);
                         songs.add(song);
                     }
@@ -565,7 +690,7 @@ public class AdminAppController {
     public void chatButtonOnAction(ActionEvent actionEvent) {
         // Open the chat window
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/javafx/songmanager/views/chat-app-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/javafx/songmanager/views/chat-window-view.fxml"));
             ChatController chatController = new ChatController();
             chatController.setClientSessionId(clientSessionId);
 

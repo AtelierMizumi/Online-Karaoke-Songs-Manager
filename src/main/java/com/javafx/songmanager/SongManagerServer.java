@@ -12,6 +12,9 @@ import javax.persistence.Query;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,6 +23,7 @@ import static java.lang.Integer.parseInt;
 
 public class SongManagerServer {
     private static final String PERSISTENCE_UNIT_NAME = "databasePU";
+    private final String songFolder = "Songs";
     private SessionFactory sessionFactory;
     private ConcurrentHashMap<String, UserInfo> clientSessions = new ConcurrentHashMap<>();
 
@@ -80,7 +84,7 @@ public class SongManagerServer {
                     case "DELETE_SONG" -> handleDeleteSong(parts, writer);
                     case "SEND_MESSAGE" -> handleSendMessage(parts, writer);
                     case "GET_USER_INFO" -> handleReturnUserCredentials(parts, writer);
-                    case "GET_MEDIA" -> handleGetMedia(parts, writer);
+                    case "GET_MEDIA" -> handleGetMedia(parts, clientSocket, writer);
                     default -> writer.println("ERROR: Invalid request");
                 }
             } catch (Exception e) {
@@ -111,8 +115,6 @@ public class SongManagerServer {
             UserInfo userInfo = server.getSessionUserInfo(sessionId);
             if (userInfo != null) {
                 // logic to save the message to the database
-
-                // Iterate over all connected clients and send the message to each of them
                 for (Socket clientSocket : server.getClients()) {
                     try {
                         PrintWriter clientWriter = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -129,7 +131,7 @@ public class SongManagerServer {
         }
     }
 
-    private void handleGetMedia(String[] parts, PrintWriter writer) {
+    private void handleGetMedia(String[] parts, Socket clientSocket, PrintWriter writer) {
         String sessionId = parts[1];
         int songId = parseInt(parts[2]);
 
@@ -137,29 +139,55 @@ public class SongManagerServer {
         if (userInfo != null) {
             Session session = sessionFactory.getCurrentSession();
             session.beginTransaction();
-            SongPath songPath = session.get(SongPath.class, songId);
-            if (songPath != null) {
-                File file = new File(songPath.getPath());
+            Query query = session.createQuery("FROM SongPath WHERE id = :songId");
+            query.setParameter("songId", songId);
+            List<SongPath> results = query.getResultList();
+            session.getTransaction().commit();
+
+            if (!results.isEmpty()) {
+                SongPath path = results.get(0);
+
+
+            if (path != null) {
+                String songName = path.getPath();
+                File file = new File(songFolder + "/" + songName);
+                String extension = songName.substring(songName.lastIndexOf(".") + 1);
+                String name = songName.substring(0, songName.lastIndexOf("."));
+                writer.println("GET_MEDIA_OK|" + name + "|" + extension);
                 if (file.exists()) {
                     try {
-                        FileInputStream fis = new FileInputStream(file);
-                        byte[] buffer = new byte[16 * 1024];
-                        int count;
-                        while ((count = fis.read(buffer)) > 0) {
-                            writer.println(new String(buffer, 0, count));
+                        DataInputStream din = new DataInputStream(clientSocket.getInputStream());
+                        DataOutputStream dout = new DataOutputStream(clientSocket.getOutputStream());
+                        System.out.println("Sending media file: " + songName);
+
+                        int bytes = 0;
+                        // Open the File where he located in your pc
+                        FileInputStream fileInputStream
+                                = new FileInputStream(file);
+
+                        dout.writeLong(file.length());
+                        byte[] buffer = new byte[4 * 1024];
+                        while ((bytes = fileInputStream.read(buffer))
+                                != -1) {
+                            dout.write(buffer, 0, bytes);
+                            dout.flush();
                         }
-                        fis.close();
+                        // close the file here
+                        fileInputStream.close();
+                        writer.println("UPLOAD_SONG_MEDIA_SUCCESS");
                         writer.println("GET_MEDIA_OK");
                     } catch (IOException e) {
                         writer.println("GET_MEDIA_FAIL");
                         throw new RuntimeException(e);
                     }
-                } else {
+                } else if (!file.exists()){
                     writer.println("NO_MEDIA_FOUND");
                 }
             } else {
                 writer.println("GET_MEDIA_FAIL");
-            }
+            }}
+        } else {
+            writer.println("GET_MEDIA_FAIL|INVALID_SESSION_ID");
         }
     }
 
@@ -241,51 +269,88 @@ public class SongManagerServer {
             writer.println("CREATE_SONG_FAIL|INVALID_SESSION_ID");
         }
     }
-    private void handleAddSongMediaToId(String[] parts, Socket clientSocket, PrintWriter writer) {
+    private void handleAddSongMediaToId(String[] parts, Socket clientSocket, PrintWriter writer) throws IOException {
         String sessionId = parts[1];
         int songId = parseInt(parts[2]);
+        String fileExtension = parts[3];
 
         UserInfo userInfo = getSessionUserInfo(sessionId);
         if (userInfo != null) {
-            try {
-                // Receive the file
-                byte[] bytes = new byte[16 * 1024];
-                InputStream in = clientSocket.getInputStream();
-                String randomHashName = UUID.randomUUID().toString();
-                String newFilePath = "/Songs/" + randomHashName;
-                FileOutputStream fos = new FileOutputStream(newFilePath);
-                int count;
-                while ((count = in.read(bytes)) > 0) {
-                    fos.write(bytes, 0, count);
-                }
-
-                // Update the SongPath field in the database
-                Session session = sessionFactory.getCurrentSession();
-                session.beginTransaction();
-                Song song = session.get(Song.class, songId);
-                if (song != null) {
-                    SongPath songPath = new SongPath();
-                    songPath.setId(songId);
-                    songPath.setPath(newFilePath);
-
-                    session.save(songPath);
-                    session.getTransaction().commit();
-
-                    writer.println("UPLOAD_SONG_MEDIA_OK");
+            DataInputStream din = new DataInputStream(clientSocket.getInputStream());
+            DataOutputStream dout = new DataOutputStream(clientSocket.getOutputStream());
+            String directoryName = songFolder;
+            File directory = new File(directoryName);
+            if (!directory.exists()) {
+                // Create the directory
+                boolean isCreated = directory.mkdir();
+                if (isCreated) {
+                    System.out.println("Directory created successfully.");
                 } else {
-                    writer.println("UPLOAD_SONG_MEDIA_FAIL");
+                    System.out.println("Failed to create the directory.");
                 }
-            } catch (IOException e) {
-                writer.println("UPLOAD_SONG_MEDIA_FAIL");
-                throw new RuntimeException(e);
+            } else { System.out.println("Directory already exists."); }
+            String newFilePath = UUID.randomUUID().toString() + "." + fileExtension;
+
+            // Delete the old song file if it exists
+            Session session = sessionFactory.getCurrentSession();
+            session.beginTransaction();
+            Query query = session.createQuery("FROM SongPath WHERE id = :songId");
+            query.setParameter("songId", songId);
+            List<SongPath> results = query.getResultList();
+            if (!results.isEmpty()) {
+                SongPath oldSongPath = results.get(0);
+                File oldFile = new File(songFolder + "/" + oldSongPath.getPath());
+                if (oldFile.exists()) {
+                    oldFile.delete();
+                    session.delete(oldSongPath);
+                }
             }
+            session.getTransaction().commit();
+
+            writer.println("LISTENING_FOR_MEDIA");
+            // Listen for the file
+            try {
+                int bytes = 0;
+                FileOutputStream fileOutputStream = new FileOutputStream(songFolder + "/" + newFilePath);
+                long size = din.readLong();
+                System.out.println("File size: " + size);
+                byte[] buffer = new byte[4 * 1024];
+                while (size > 0
+                        && (bytes = din.read(
+                        buffer, 0,
+                        (int) Math.min(buffer.length, size)))
+                        != -1) {
+                    // Here we write the file using write method
+                    fileOutputStream.write(buffer, 0, bytes);
+                    size -= bytes; // read upto file size
+                }
+
+                fileOutputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            writer.println("UPLOAD_SONG_MEDIA_SUCCESS");
+            System.out.println("Media uploaded successfully");
+            din.close();
+            dout.close();
+
+            // Save the path to the database
+            session = sessionFactory.getCurrentSession();
+            session.beginTransaction();
+            SongPath songPath = new SongPath(songId, newFilePath);
+            session.save(songPath);
+            session.getTransaction().commit();
         } else {
             writer.println("UPLOAD_SONG_MEDIA_FAIL");
         }
     }
 
+    private String newHashedName(String fileExtension) {
+        return UUID.randomUUID().toString() + "." + fileExtension;
+    }
+
     private UserInfo getSessionUserInfo(String sessionId) {
-        // logic to get the user info from the session ID
         return clientSessions.get(sessionId);
     }
 
@@ -313,17 +378,19 @@ public class SongManagerServer {
 
     private void handleUpdateSong(String[] parts, PrintWriter writer) {
         String sessionId = parts[1];
-        String title = parts[2];
-        String artist = parts[3];
-        String album = parts[4];
-        String year = parts[5];
+        int songId = Integer.parseInt(parts[2]);
+        String title = parts[3];
+        String artist = parts[4];
+        String album = parts[5];
+        String year = parts[6];
 
         UserInfo userInfo = getSessionUserInfo(sessionId);
         if (userInfo != null) {
             Session session = sessionFactory.getCurrentSession();
             session.beginTransaction();
-            Song song = session.get(Song.class, title);
+            Song song = session.get(Song.class, songId);
             if (song != null) {
+                song.setTitle(title);
                 song.setArtist(artist);
                 song.setAlbum(album);
                 song.setReleaseYear(year);
@@ -332,10 +399,10 @@ public class SongManagerServer {
 
                 writer.println("UPDATE_SONG_OK");
             } else {
-                writer.println("UPDATE_SONG_FAIL");
+                writer.println("UPDATE_SONG_FAIL|SONG_NOT_FOUND");
             }
         } else {
-            writer.println("UPDATE_SONG_FAIL");
+            writer.println("UPDATE_SONG_FAIL|INVALID_SESSION_ID");
         }
     }
 
@@ -347,20 +414,41 @@ public class SongManagerServer {
         if (userInfo != null) {
             Session session = sessionFactory.getCurrentSession();
             session.beginTransaction();
+            SongPath songPath = session.get(SongPath.class, Id);
+            if (songPath == null) {
+                System.out.println("SongPath object non existent.");
+            } else {
+                Path path = Paths.get(songFolder + "/" + songPath.getPath());
+                if (Files.exists(path)) {
+                    try {
+                        Files.delete(path);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                System.out.println("Deleting Path: " + songPath.getId() + " - " + songPath.getPath());
+                // Ensure that songPath is managed by the current session
+                if (!session.contains(songPath)) {
+                    songPath = (SongPath) session.merge(songPath);
+                }
+                session.delete(songPath);
+            }
+
             Song song = session.get(Song.class, Id);
             if (song != null) {
                 System.out.println("Deleting song: " + song.getId() + " - " + song.getTitle());
+                // Ensure that song is managed by the current session
+                if (!session.contains(song)) {
+                    song = (Song) session.merge(song);
+                }
                 session.delete(song);
-                session.getTransaction().commit();
-
                 writer.println("DELETE_SONG_OK");
             } else {
                 writer.println("DELETE_SONG_FAIL");
             }
-        } else if (userInfo == null){
-            writer.println("DELETE_SONG_FAIL|INVALID_SESSION_ID");
+            session.getTransaction().commit();
         } else {
-            writer.println("DELETE_SONG_FAIL");
+            writer.println("DELETE_SONG_FAIL|INVALID_SESSION_ID");
         }
     }
 
@@ -368,8 +456,14 @@ public class SongManagerServer {
         Session session = sessionFactory.getCurrentSession();
         session.beginTransaction();
         Query query = session.createQuery("SELECT MAX(id) FROM Song");
+        if (query.getSingleResult() == null) {
+            session.getTransaction().commit();
+            session.close();
+            return 1;
+        }
         int maxId = (int) query.getSingleResult();
         session.getTransaction().commit();
+        session.close();
         return maxId + 1;
     }
 
