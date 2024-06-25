@@ -4,21 +4,28 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="81b6b812-28a8-4a4a-b456-bae075d2db7d" name="Changes" comment="Redefined server-client interaction. Register operation half-baked completed">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/controllers/UserAppController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/assets/styles/default-dark.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/assets/styles/default.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/views/user-app.fxml" afterDir="false" />
+    <list default="true" id="81b6b812-28a8-4a4a-b456-bae075d2db7d" name="Changes" comment="adding normal user client view to be worked on">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/controllers/AdminAppController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/controllers/ChatController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/models/SongPath.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/models/UserSession.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/views/chat-window.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/db.mv.db" beforeDir="false" afterPath="$PROJECT_DIR$/db.mv.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db.trace.db" beforeDir="false" afterPath="$PROJECT_DIR$/db.trace.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/SongManagerServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/SongManagerServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/controllers/ClientController.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/controllers/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/controllers/LoginController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/controllers/RegisterController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/controllers/RegisterController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/controllers/UserAppController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/controllers/UserAppController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/models/Song.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/models/Song.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/models/UserInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/javafx/songmanager/models/UserInfo.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/module-info.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/module-info.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/assets/icon.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/assets/icon.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/views/client-view.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/views/admin-app-view.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/persistence.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/persistence.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/views/admin-app-view.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/views/admin-app-view.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/views/login-view.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/views/login-view.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/views/register-view.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/views/register-view.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/views/user-app.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/views/user-app-view.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -28,8 +35,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Class" />
         <option value="FxmlFile" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -54,26 +61,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "/home/thuanc177/IdeaProjects/Online-Karaoke-Songs-Manager/src/main/resources/com/javafx/songmanager/assets/styles",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "project.structure.last.edited": "Global Libraries",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/thuanc177/IdeaProjects/ATM_Management_App&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Global Libraries&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/main/resources/com/javafx/songmanager/assets/styles" />
@@ -132,7 +139,45 @@
       <workItem from="1716720813131" duration="10102000" />
       <workItem from="1716790597245" duration="62000" />
       <workItem from="1716790684421" duration="43000" />
-      <workItem from="1716790745964" duration="5219000" />
+      <workItem from="1716790745964" duration="5266000" />
+      <workItem from="1716797275991" duration="1763000" />
+      <workItem from="1716802338407" duration="2152000" />
+      <workItem from="1717042650030" duration="3759000" />
+      <workItem from="1717164743700" duration="1232000" />
+      <workItem from="1717224216125" duration="1321000" />
+      <workItem from="1717254503522" duration="3816000" />
+      <workItem from="1717320729784" duration="625000" />
+      <workItem from="1717472919923" duration="1779000" />
+      <workItem from="1717492039697" duration="8807000" />
+      <workItem from="1717508586103" duration="2482000" />
+      <workItem from="1717511216990" duration="9000" />
+      <workItem from="1717511254302" duration="529000" />
+      <workItem from="1717511920945" duration="71000" />
+      <workItem from="1717512010601" duration="128000" />
+      <workItem from="1717512170562" duration="304000" />
+      <workItem from="1717512485741" duration="2816000" />
+      <workItem from="1717570628674" duration="686000" />
+      <workItem from="1717572767448" duration="1656000" />
+      <workItem from="1717913528801" duration="540000" />
+      <workItem from="1718008438289" duration="1000" />
+      <workItem from="1718381586115" duration="1205000" />
+      <workItem from="1718413409685" duration="1439000" />
+      <workItem from="1718447711482" duration="1208000" />
+      <workItem from="1718525958603" duration="752000" />
+      <workItem from="1718551253382" duration="3044000" />
+      <workItem from="1718608949845" duration="212000" />
+      <workItem from="1718609235210" duration="6846000" />
+      <workItem from="1718630034005" duration="37000" />
+      <workItem from="1718630112011" duration="4289000" />
+      <workItem from="1718737126010" duration="610000" />
+      <workItem from="1718802028952" duration="599000" />
+      <workItem from="1718814437502" duration="1935000" />
+      <workItem from="1718816564843" duration="14213000" />
+      <workItem from="1719119594624" duration="5091000" />
+      <workItem from="1719134881985" duration="4789000" />
+      <workItem from="1719194474322" duration="24026000" />
+      <workItem from="1719259197685" duration="4949000" />
+      <workItem from="1719265106425" duration="25418000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -150,7 +195,15 @@
       <option name="project" value="LOCAL" />
       <updated>1716735327135</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="adding normal user client view to be worked on">
+      <option name="closed" value="true" />
+      <created>1716796552709</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1716796552709</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -160,7 +213,8 @@
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="init" />
     <MESSAGE value="Redefined server-client interaction. Register operation half-baked completed" />
-    <option name="LAST_COMMIT_MESSAGE" value="Redefined server-client interaction. Register operation half-baked completed" />
+    <MESSAGE value="adding normal user client view to be worked on" />
+    <option name="LAST_COMMIT_MESSAGE" value="adding normal user client view to be worked on" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

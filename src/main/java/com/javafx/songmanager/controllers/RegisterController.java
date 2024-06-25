@@ -100,7 +100,7 @@ public class RegisterController {
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            out.println("REGISTER " + username + " " + password + " " + email);
+            out.println("REGISTER|" + username + "|" + password + "|" + email);
 
             String response = in.readLine();
             System.out.println("Server response: " + response);
@@ -112,7 +112,7 @@ public class RegisterController {
                 alert.setContentText("User registered successfully!");
                 alert.showAndWait();
 
-                switchToUserApp();
+                switchToLoginOnAction(new ActionEvent());
             } else {
                 // Registration failed
                 Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -150,17 +150,15 @@ public class RegisterController {
         });
     }
 
-    @FXML
-    void switchToUserApp() {
-        // Close the current stage
-        Stage stage = (Stage) usernameTextField.getScene().getWindow();
-        stage.close();
-        // Open the app stage
+    void switchToUserApp(Stage stage, String sessionId) {
+        // Load the user app view
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/javafx/songmanager/views/user-app.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/javafx/songmanager/views/user-app-view.fxml"));
             Parent root = loader.load();
             Scene scene = new Scene(root);
             stage.setScene(scene);
+            UserAppController controller = loader.getController();
+            controller.setClientSessionId(sessionId);
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();

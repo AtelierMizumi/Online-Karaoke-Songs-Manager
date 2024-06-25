@@ -1,6 +1,7 @@
 package com.javafx.songmanager;
 
 import com.javafx.songmanager.models.Song;
+import com.javafx.songmanager.models.SongPath;
 import com.javafx.songmanager.models.UserInfo;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -8,18 +9,19 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import javax.persistence.Persistence;
 import javax.persistence.Query;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static java.lang.Integer.parseInt;
 
 public class SongManagerServer {
     private static final String PERSISTENCE_UNIT_NAME = "databasePU";
     private SessionFactory sessionFactory;
+    private ConcurrentHashMap<String, UserInfo> clientSessions = new ConcurrentHashMap<>();
 
     public SongManagerServer() {
         javax.persistence.EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("databasePU");
@@ -35,7 +37,7 @@ public class SongManagerServer {
         }
     }
 
-    public void startServer() throws IOException {
+    public synchronized void startServer() throws IOException {
         ServerSocket serverSocket = new ServerSocket(8080);
         System.out.println("SongManager Server started on port 8080");
 
@@ -66,22 +68,20 @@ public class SongManagerServer {
                 String request = reader.readLine();
                 System.out.println("Received request: " + request);
 
-                String[] parts = request.split(" ");
+                String[] parts = request.split("\\|", -1);
 
-                if (parts[0].equals("REGISTER")) {
-                    handleRegister(parts, writer);
-                } else if (parts[0].equals("LOGIN")) {
-                    handleLogin(parts, writer);
-                } else if (parts[0].equals("CREATE_SONG")) {
-                    handleCreateSong(parts, writer);
-                } else if (parts[0].equals("READ_SONGS")) {
-                    handleReadSongs(writer);
-                } else if (parts[0].equals("UPDATE_SONG")) {
-                    handleUpdateSong(parts, writer);
-                } else if (parts[0].equals("DELETE_SONG")) {
-                    handleDeleteSong(parts, writer);
-                } else {
-                    writer.println("ERROR: Invalid request");
+                switch (parts[0]) {
+                    case "REGISTER" -> handleRegister(parts, writer);
+                    case "LOGIN" -> handleLogin(parts, writer);
+                    case "CREATE_SONG" -> handleCreateSong(parts, writer);
+                    case "ADD_SONG_MEDIA_TO_ID" -> handleAddSongMediaToId(parts, clientSocket, writer);
+                    case "RETRIEVE_SONGS" -> handleRetrieveSongs(parts, writer);
+                    case "UPDATE_SONG" -> handleUpdateSong(parts, writer);
+                    case "DELETE_SONG" -> handleDeleteSong(parts, writer);
+                    case "SEND_MESSAGE" -> handleSendMessage(parts, writer);
+                    case "GET_USER_INFO" -> handleReturnUserCredentials(parts, writer);
+                    case "GET_MEDIA" -> handleGetMedia(parts, writer);
+                    default -> writer.println("ERROR: Invalid request");
                 }
             } catch (Exception e) {
                 System.err.println("Error handling client request: " + e.getMessage());
@@ -93,6 +93,78 @@ public class SongManagerServer {
                 }
             }
         }
+
+        public void handleReturnUserCredentials(String[] parts, PrintWriter writer) {
+            String sessionId = parts[1];
+            UserInfo userInfo = server.getSessionUserInfo(sessionId);
+            if (userInfo != null) {
+                writer.println("GET_USER_INFO_OK|" + userInfo.getEmail_Address() + "|" + userInfo.getUsername());
+            } else {
+                writer.println("GET_USER_INFO_FAIL|INVALID_SESSION_ID");
+            }
+        }
+
+        private void handleSendMessage(String[] parts, PrintWriter writer) {
+            String sessionId = parts[1];
+            String message = parts[2];
+
+            UserInfo userInfo = server.getSessionUserInfo(sessionId);
+            if (userInfo != null) {
+                // logic to save the message to the database
+
+                // Iterate over all connected clients and send the message to each of them
+                for (Socket clientSocket : server.getClients()) {
+                    try {
+                        PrintWriter clientWriter = new PrintWriter(clientSocket.getOutputStream(), true);
+                        clientWriter.println("MESSAGE|" + sessionId + "|" + message);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                writer.println("SEND_MESSAGE_OK");
+            } else {
+                writer.println("SEND_MESSAGE_FAIL");
+            }
+        }
+    }
+
+    private void handleGetMedia(String[] parts, PrintWriter writer) {
+        String sessionId = parts[1];
+        int songId = parseInt(parts[2]);
+
+        UserInfo userInfo = getSessionUserInfo(sessionId);
+        if (userInfo != null) {
+            Session session = sessionFactory.getCurrentSession();
+            session.beginTransaction();
+            SongPath songPath = session.get(SongPath.class, songId);
+            if (songPath != null) {
+                File file = new File(songPath.getPath());
+                if (file.exists()) {
+                    try {
+                        FileInputStream fis = new FileInputStream(file);
+                        byte[] buffer = new byte[16 * 1024];
+                        int count;
+                        while ((count = fis.read(buffer)) > 0) {
+                            writer.println(new String(buffer, 0, count));
+                        }
+                        fis.close();
+                        writer.println("GET_MEDIA_OK");
+                    } catch (IOException e) {
+                        writer.println("GET_MEDIA_FAIL");
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    writer.println("NO_MEDIA_FOUND");
+                }
+            } else {
+                writer.println("GET_MEDIA_FAIL");
+            }
+        }
+    }
+
+    private Socket[] getClients() {
+        return new Socket[0];
     }
 
     private void handleRegister(String[] parts, PrintWriter writer) {
@@ -119,23 +191,31 @@ public class SongManagerServer {
         String password = parts[2];
 
         // logic to query user's information
-        Session session = sessionFactory.getCurrentSession();
-        session.beginTransaction();
-        Query query = session.createQuery("FROM UserInfo WHERE username = :username");
+        Session transactionSession = sessionFactory.getCurrentSession();
+        transactionSession.beginTransaction();
+        Query query = transactionSession.createQuery("FROM UserInfo WHERE username = :username");
         query.setParameter("username", username);
         UserInfo userInfo = (UserInfo) query.getSingleResult();
-        session.getTransaction().commit();
-        session.close();
+        transactionSession.getTransaction().commit();
+        transactionSession.close();
 
         if (userInfo != null) {
                 if (BCrypt.checkpw(password, userInfo.getHashed_password())) {
-                    String sessionId = generateSessionId(userInfo);
-                    writer.println("LOGIN_OK " + sessionId);
-            } else {
-                writer.println("LOGIN_FAILED PASSWORD_INCORRECT");
-            }
+                    if (userInfo.isAdmin()) {
+                        String sessionId = generateSessionId();
+                        clientSessions.put(sessionId, userInfo);
+                        writer.println("LOGIN_OK_ADMIN|" + sessionId);
+                    } else {
+                        // generate a session ID and save it to the clientSessions map (session ID, user info
+                        String sessionId = generateSessionId();
+                        clientSessions.put(sessionId, userInfo);
+                        writer.println("LOGIN_OK|" + sessionId);
+                    }
+                } else {
+                    writer.println("LOGIN_FAILED|PASSWORD_INCORRECT");
+                }
         } else {
-            writer.println("LOGIN_FAILED USER_NON_EXIST");
+            writer.println("LOGIN_FAILED|USER_NON_EXIST");
         }
 
     }
@@ -146,42 +226,90 @@ public class SongManagerServer {
         String artist = parts[3];
         String album = parts[4];
         String year = parts[5];
-        String path = parts[6];
 
         UserInfo userInfo = getSessionUserInfo(sessionId);
         if (userInfo != null) {
-            Song song = new Song(title, artist, album, year, path);
+            Song song = new Song(generateSongId(), title, artist, album, year);
             Session session = sessionFactory.getCurrentSession();
             session.beginTransaction();
             session.save(song);
+            session.flush();
             session.getTransaction().commit();
 
-            writer.println("CREATE_SONG_OK");
+            writer.println("CREATE_SONG_OK|" + song.getId());
         } else {
-            writer.println("CREATE_SONG_FAIL " + sessionId);
+            writer.println("CREATE_SONG_FAIL|INVALID_SESSION_ID");
+        }
+    }
+    private void handleAddSongMediaToId(String[] parts, Socket clientSocket, PrintWriter writer) {
+        String sessionId = parts[1];
+        int songId = parseInt(parts[2]);
+
+        UserInfo userInfo = getSessionUserInfo(sessionId);
+        if (userInfo != null) {
+            try {
+                // Receive the file
+                byte[] bytes = new byte[16 * 1024];
+                InputStream in = clientSocket.getInputStream();
+                String randomHashName = UUID.randomUUID().toString();
+                String newFilePath = "/Songs/" + randomHashName;
+                FileOutputStream fos = new FileOutputStream(newFilePath);
+                int count;
+                while ((count = in.read(bytes)) > 0) {
+                    fos.write(bytes, 0, count);
+                }
+
+                // Update the SongPath field in the database
+                Session session = sessionFactory.getCurrentSession();
+                session.beginTransaction();
+                Song song = session.get(Song.class, songId);
+                if (song != null) {
+                    SongPath songPath = new SongPath();
+                    songPath.setId(songId);
+                    songPath.setPath(newFilePath);
+
+                    session.save(songPath);
+                    session.getTransaction().commit();
+
+                    writer.println("UPLOAD_SONG_MEDIA_OK");
+                } else {
+                    writer.println("UPLOAD_SONG_MEDIA_FAIL");
+                }
+            } catch (IOException e) {
+                writer.println("UPLOAD_SONG_MEDIA_FAIL");
+                throw new RuntimeException(e);
+            }
+        } else {
+            writer.println("UPLOAD_SONG_MEDIA_FAIL");
         }
     }
 
     private UserInfo getSessionUserInfo(String sessionId) {
-        Session session = sessionFactory.getCurrentSession();
-        session.beginTransaction();
-        UserInfo userInfo = session.get(UserInfo.class, sessionId);
-        session.getTransaction().commit();
-        return userInfo;
+        // logic to get the user info from the session ID
+        return clientSessions.get(sessionId);
     }
 
-    private void handleReadSongs(PrintWriter writer) {
-        Session session = sessionFactory.getCurrentSession();
-        session.beginTransaction();
-        List<Song> songs = session.createQuery("FROM Song").list();
-        session.getTransaction().commit();
-
-        for (Song song : songs) {
-            writer.println("SONG " + song.getTitle() + " " + song.getArtist() + " " + song.getAlbum() + " " + song.getReleased_year() + " " + song.getPath());
-            writer.println("END_SONGS");
+    private void handleRetrieveSongs(String[] parts, PrintWriter writer) {
+        String sessionId = parts[1];
+        System.out.println("Retrieving songs for session ID: " + sessionId);
+        UserInfo userInfo = getSessionUserInfo(sessionId);
+        if (userInfo == null) {
+            writer.println("RETRIEVE_SONGS_FAIL|NULL_SESSION_ID");
+            return;
+        } else {
+            Session session = sessionFactory.getCurrentSession();
+            session.beginTransaction();
+            Query query = session.createQuery("FROM Song");
+            List<Song> songs = query.getResultList();
             session.getTransaction().commit();
+
+            for (Song song : songs) {
+                String songDetails = String.format("%s|%s|%s|%s|%s", song.getId(), song.getTitle(), song.getArtist(), song.getAlbum(), song.getReleaseYear());
+                writer.println(songDetails);
+            }
+            writer.println("END_SONGS");
         }
-}
+    }
 
     private void handleUpdateSong(String[] parts, PrintWriter writer) {
         String sessionId = parts[1];
@@ -189,7 +317,6 @@ public class SongManagerServer {
         String artist = parts[3];
         String album = parts[4];
         String year = parts[5];
-        String path = parts[6];
 
         UserInfo userInfo = getSessionUserInfo(sessionId);
         if (userInfo != null) {
@@ -199,8 +326,7 @@ public class SongManagerServer {
             if (song != null) {
                 song.setArtist(artist);
                 song.setAlbum(album);
-                song.setReleased_year(year);
-                song.setPath(path);
+                song.setReleaseYear(year);
                 session.update(song);
                 session.getTransaction().commit();
 
@@ -215,14 +341,15 @@ public class SongManagerServer {
 
     private void handleDeleteSong(String[] parts, PrintWriter writer) {
         String sessionId = parts[1];
-        String title = parts[2];
+        Integer Id = parseInt(parts[2]);
 
         UserInfo userInfo = getSessionUserInfo(sessionId);
         if (userInfo != null) {
             Session session = sessionFactory.getCurrentSession();
             session.beginTransaction();
-            Song song = session.get(Song.class, title);
+            Song song = session.get(Song.class, Id);
             if (song != null) {
+                System.out.println("Deleting song: " + song.getId() + " - " + song.getTitle());
                 session.delete(song);
                 session.getTransaction().commit();
 
@@ -230,13 +357,23 @@ public class SongManagerServer {
             } else {
                 writer.println("DELETE_SONG_FAIL");
             }
+        } else if (userInfo == null){
+            writer.println("DELETE_SONG_FAIL|INVALID_SESSION_ID");
         } else {
             writer.println("DELETE_SONG_FAIL");
         }
     }
 
-    private String generateSessionId(UserInfo userInfo) {
-        // implement your own session ID generation logic
+    private int generateSongId() {
+        Session session = sessionFactory.getCurrentSession();
+        session.beginTransaction();
+        Query query = session.createQuery("SELECT MAX(id) FROM Song");
+        int maxId = (int) query.getSingleResult();
+        session.getTransaction().commit();
+        return maxId + 1;
+    }
+
+    private String generateSessionId() {
         return UUID.randomUUID().toString();
     }
 }

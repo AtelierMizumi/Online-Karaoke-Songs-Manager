@@ -27,7 +27,7 @@
                   <Rectangle2D height="1620.0" minX="900.0" width="1080.0" />
                </viewport>
             </ImageView>
-            <Text fill="WHITE" layoutX="48.0" layoutY="50.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Chat Application">
+            <Text fill="WHITE" layoutX="48.0" layoutY="50.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Song Manager">
                <font>
                   <Font name="System Bold" size="24.0" />
                </font>

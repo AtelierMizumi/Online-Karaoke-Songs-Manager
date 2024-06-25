@@ -1,14 +1,238 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
+<?import java.net.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
+<?import org.kordamp.ikonli.javafx.*?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.javafx.songmanager.views.AdminAppView"
-            prefHeight="400.0" prefWidth="600.0">
-
-</AnchorPane>
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="540.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1">
+    <children>
+        <AnchorPane prefHeight="200.0" prefWidth="200.0">
+            <children>
+                <BorderPane layoutX="14.0" layoutY="14.0" prefHeight="540.0" prefWidth="1100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <left>
+                        <AnchorPane prefHeight="200.0" prefWidth="200.0" styleClass="nav-form" stylesheets="@../assets/styles/default.css" BorderPane.alignment="CENTER">
+                            <children>
+                                <AnchorPane prefHeight="160.0" prefWidth="202.0">
+                                    <children>
+                                        <Line endX="72.0" layoutX="99.0" layoutY="147.0" startX="-72.0" />
+                                        <Label alignment="CENTER" layoutX="61.0" layoutY="87.0" prefHeight="18.0" prefWidth="74.0" stylesheets="@../assets/styles/default.css" text="Welcome !" textAlignment="CENTER" textFill="#cad3f5">
+                                            <font>
+                                                <Font name="System Bold" size="12.0" />
+                                            </font>
+                                        </Label>
+                                        <Label alignment="CENTER" contentDisplay="CENTER" layoutX="76.0" layoutY="105.0" stylesheets="@../assets/styles/default.css" textAlignment="CENTER" textFill="#a6da95">
+                                            <font>
+                                                <Font name="Tahoma Bold" size="16.0" />
+                                            </font>
+                                        </Label>
+                                        <FontIcon iconColor="#1e2030" iconLiteral="fa-music" iconSize="64" layoutX="74.0" layoutY="69.0" selectionStart="20" />
+                                    </children>
+                                </AnchorPane>
+                                <Button fx:id="chatButton" layoutX="107.0" layoutY="499.0" mnemonicParsing="false" onAction="#chatButtonOnAction" prefHeight="26.0" prefWidth="80.0" styleClass="nav-button" stylesheets="@../assets/styles/default.css" text="Chat">
+                                    <graphic>
+                                    </graphic>
+                                    <font>
+                                        <Font name="System Bold" size="12.0" />
+                                    </font>
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fa-comment" />
+                                    </graphic>
+                                </Button>
+                                <Button fx:id="exitButton" layoutX="14.0" layoutY="499.0" mnemonicParsing="false" onAction="#exitButtonOnAction" prefHeight="26.0" prefWidth="80.0" styleClass="nav-button" stylesheets="@../assets/styles/default.css" text="Exit">
+                                    <graphic>
+                                    </graphic>
+                                    <font>
+                                        <Font name="System Bold" size="12.0" />
+                                    </font>
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fa-bed" />
+                                    </graphic>
+                                </Button>
+                                <Separator layoutX="200.0" orientation="VERTICAL" prefHeight="540.0" prefWidth="4.0" />
+                                <Button fx:id="viewButton" layoutX="55.0" layoutY="180.0" mnemonicParsing="false" onAction="#switchForm" prefHeight="26.0" prefWidth="92.0" styleClass="nav-button" stylesheets="@../assets/styles/default.css" text="View">
+                                    <graphic>
+                                    </graphic>
+                                    <font>
+                                        <Font name="System Bold" size="12.0" />
+                                    </font>
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fa-table" />
+                                    </graphic>
+                                </Button>
+                                <Button fx:id="addButton" layoutX="55.0" layoutY="210.0" mnemonicParsing="false" onAction="#switchForm" prefHeight="26.0" prefWidth="92.0" styleClass="nav-button" stylesheets="@../assets/styles/default.css" text="Add">
+                                    <font>
+                                        <Font name="System Bold" size="12.0" />
+                                    </font>
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fa-plus" />
+                                    </graphic>
+                                </Button>
+                                <Button fx:id="editButton" layoutX="55.0" layoutY="240.0" mnemonicParsing="false" onAction="#switchForm" prefHeight="26.0" prefWidth="92.0" styleClass="nav-button" stylesheets="@../assets/styles/default.css" text="Edit">
+                                    <font>
+                                        <Font name="System Bold" size="12.0" />
+                                    </font>
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fa-edit" />
+                                    </graphic>
+                                </Button>
+                                <Button fx:id="deleteButton" layoutX="55.0" layoutY="270.0" mnemonicParsing="false" onAction="#switchForm" prefHeight="26.0" prefWidth="92.0" styleClass="nav-button" stylesheets="@../assets/styles/default.css" text="Delete">
+                                    <font>
+                                        <Font name="System Bold" size="12.0" />
+                                    </font>
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fa-close" />
+                                    </graphic>
+                                </Button>
+                            </children>
+                        </AnchorPane>
+                    </left>
+                    <center>
+                        <AnchorPane prefHeight="200.0" prefWidth="200.0" stylesheets="@../assets/styles/default.css" BorderPane.alignment="CENTER">
+                            <children>
+                                <AnchorPane fx:id="viewTab" prefHeight="542.0" prefWidth="892.0" styleClass="anchor-pane-style" stylesheets="@../assets/styles/default.css">
+                                    <children>
+                                        <AnchorPane layoutX="14.0" layoutY="67.0" prefHeight="460.0" prefWidth="860.0" styleClass="shadow-effect">
+                                            <children>
+                                                <TableView fx:id="viewTable" layoutX="3.2" layoutY="6.4" prefHeight="460.0" prefWidth="860.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                    <columns>
+                                                        <TableColumn fx:id="viewIDCol" editable="false" text="ID" />
+                                                        <TableColumn fx:id="viewTitleCol" editable="false" prefWidth="275.0" text="Title" />
+                                                        <TableColumn fx:id="viewAlbumCol" editable="false" minWidth="0.0" prefWidth="250.0" text="Album" />
+                                                        <TableColumn fx:id="viewArtistCol" editable="false" prefWidth="160.0" text="Artist" />
+                                                        <TableColumn fx:id="viewYearCol" editable="false" prefWidth="90.0" text="Year" />
+                                                    </columns>
+                                                </TableView>
+                                            </children>
+                                            <stylesheets>
+                                                <URL value="@../assets/styles/default.css" />
+                                                <URL value="@../assets/styles/default.css" />
+                                            </stylesheets>
+                                        </AnchorPane>
+                                        <TextField fx:id="searchBar" layoutX="14.0" layoutY="20.0" prefHeight="32.0" prefWidth="320.0" promptText="Search" />
+                                    </children>
+                                </AnchorPane>
+                                  <AnchorPane fx:id="addTab" prefHeight="542.4" prefWidth="892.0" styleClass="anchor-pane-style" stylesheets="@../assets/styles/default.css" visible="false">
+                                      <children>
+                                          <AnchorPane layoutX="330.0" layoutY="14.0" prefHeight="510.0" prefWidth="550.0" styleClass="shadow-effect">
+                                              <children>
+                                                  <TableView fx:id="previewAddTable" layoutX="97.0" layoutY="50.0" prefHeight="460.0" prefWidth="550.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="58.0">
+                                                      <columns>
+                                                          <TableColumn fx:id="addIDCol" prefWidth="66.4000244140625" text="ID" />
+                                                          <TableColumn fx:id="addTitleCol" minWidth="0.0" prefWidth="283.99993896484375" text="Title" />
+                                                          <TableColumn fx:id="addAlbumCol" minWidth="0.0" prefWidth="200.0" text="Album" />
+                                                          <TableColumn fx:id="addArtistCol" minWidth="0.0" prefWidth="200.0" text="Artist" />
+                                                          <TableColumn fx:id="addYearCol" minWidth="0.0" prefWidth="200.0" text="Year" />
+                                                      </columns>
+                                                  </TableView>
+                                              </children>
+                                          </AnchorPane>
+                                          <AnchorPane layoutX="14.0" layoutY="14.0" prefHeight="510.0" prefWidth="300.0">
+                                              <children>
+                                                  <Label alignment="CENTER" contentDisplay="CENTER" layoutX="68.0" layoutY="14.0" text="New Song Properties" textAlignment="CENTER" textFill="#cad3f5">
+                                                      <font>
+                                                          <Font name="System Bold" size="18.0" />
+                                                      </font>
+                                                  </Label>
+                                                  <TextField fx:id="addTabTitleTextField" layoutX="20.0" layoutY="75.0" prefHeight="26.0" prefWidth="260.0" promptText="Enter Title" />
+                                                  <TextField fx:id="addTabAudioPath" layoutX="49.0" layoutY="384.0" prefHeight="26.0" prefWidth="230.0" promptText="Enter path or use the upload button" />
+                                                  <TextField fx:id="addTabAlbumTextField" layoutX="20.0" layoutY="115.0" prefHeight="26.0" prefWidth="260.0" promptText="Enter Album" />
+                                                  <TextField fx:id="addTabArtistTextField" layoutX="20.0" layoutY="155.0" prefHeight="26.0" prefWidth="260.0" promptText="Enter Artist" />
+                                                  <TextField fx:id="addTabYearTextField" layoutX="20.0" layoutY="195.0" prefHeight="26.0" prefWidth="260.0" promptText="Enter Year" />
+                                                  <Button fx:id="addTabUploadAudioButton" layoutX="14.0" layoutY="384.0" mnemonicParsing="false" onAction="#addTabUploadAudioButtonOnAction" prefHeight="26.0" prefWidth="26.0" />
+                                                  <Button fx:id="addTabUploadButton" layoutX="14.0" layoutY="440.0" mnemonicParsing="false" onAction="#addTabUploadButtonOnAction" prefHeight="32.0" prefWidth="120.0" text="Add" textAlignment="CENTER">
+                                                      <font>
+                                                          <Font name="Tahoma Bold" size="16.0" />
+                                                      </font>
+                                                  </Button>
+                                                  <Button fx:id="addTabClearButton" layoutX="160.0" layoutY="440.0" mnemonicParsing="false" onAction="#addTabClearButton" prefHeight="32.0" prefWidth="120.0" text="Clear" textAlignment="CENTER">
+                                                      <font>
+                                                          <Font name="Tahoma Bold" size="16.0" />
+                                                      </font>
+                                                  </Button>
+                                                  <FontIcon iconLiteral="fa-upload" layoutX="20.0" layoutY="401.0" />
+                                              </children>
+                                          </AnchorPane>
+                                      </children>
+                                  </AnchorPane>
+                                  <AnchorPane fx:id="editTab" prefHeight="542.4" prefWidth="892.0" styleClass="anchor-pane-style" stylesheets="@../assets/styles/default.css" visible="false">
+                                      <children>
+                                          <AnchorPane layoutX="14.0" layoutY="14.0" prefHeight="510.0" prefWidth="300.0">
+                                              <children>
+                                                  <Label alignment="CENTER" contentDisplay="CENTER" layoutX="63.0" layoutY="14.0" text="Edit Song Properties" textAlignment="CENTER" textFill="#cad3f5">
+                                                      <font>
+                                                          <Font name="System Bold" size="18.0" />
+                                                      </font>
+                                                  </Label>
+                                                  <TextField fx:id="editTitleTextField" layoutX="20.0" layoutY="76.0" prefHeight="26.0" prefWidth="260.0" promptText="Enter Title" />
+                                                  <TextField fx:id="editSongPathTextField" layoutX="49.0" layoutY="384.0" prefHeight="26.0" prefWidth="230.0" promptText="Enter path or use the upload button" />
+                                                  <TextField fx:id="editAlbumTextField" layoutX="20.0" layoutY="116.0" prefHeight="26.0" prefWidth="260.0" promptText="Enter Album" />
+                                                  <TextField fx:id="editArtistTextField" layoutX="20.0" layoutY="156.0" prefHeight="26.0" prefWidth="260.0" promptText="Enter Artist" />
+                                                  <TextField fx:id="editYearTextField" layoutX="20.0" layoutY="196.0" prefHeight="26.0" prefWidth="260.0" promptText="Enter Year" />
+                                                  <Button fx:id="editTabUploadAudioButton" layoutX="14.0" layoutY="384.0" mnemonicParsing="false" onAction="#editTabUploadAudioButtonOnAction" prefHeight="26.0" prefWidth="26.0" />
+                                                  <Button fx:id="editTabEditButton" layoutX="14.0" layoutY="440.0" mnemonicParsing="false" onAction="#editTabEditButtonOnAction" prefHeight="32.0" prefWidth="120.0" text="Edit" textAlignment="CENTER">
+                                                      <font>
+                                                          <Font name="Tahoma Bold" size="16.0" />
+                                                      </font>
+                                                  </Button>
+                                                  <Button fx:id="editTabClearButton" layoutX="160.0" layoutY="440.0" mnemonicParsing="false" onAction="#editTabClearButtonOnAction" prefHeight="32.0" prefWidth="120.0" text="Clear" textAlignment="CENTER">
+                                                      <font>
+                                                          <Font name="Tahoma Bold" size="16.0" />
+                                                      </font>
+                                                  </Button>
+                                                  <TextField fx:id="editSearchBar" layoutX="317.0" layoutY="23.0" prefHeight="32.0" prefWidth="320.0" promptText="Search" />
+                                                  <FontIcon iconLiteral="fa-upload" layoutX="20.0" layoutY="401.0" />
+                                              </children>
+                                          </AnchorPane>
+                                          <AnchorPane layoutX="330.0" layoutY="85.0" prefHeight="440.0" prefWidth="550.0" styleClass="shadow-effect">
+                                              <children>
+                                                  <TableView fx:id="previewEditTable" layoutX="97.0" layoutY="38.0" prefHeight="300.0" prefWidth="865.6" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                      <columns>
+                                                          <TableColumn fx:id="editIDCol" prefWidth="66.4000244140625" text="ID" />
+                                                          <TableColumn fx:id="editTitleCol" minWidth="0.0" prefWidth="283.99993896484375" text="Title" />
+                                                          <TableColumn fx:id="editAlbumCol" minWidth="0.0" prefWidth="200.0" text="Album" />
+                                                          <TableColumn fx:id="editArtistCol" minWidth="0.0" prefWidth="200.0" text="Artist" />
+                                                          <TableColumn fx:id="editYearCol" minWidth="0.0" prefWidth="200.0" text="Year" />
+                                                      </columns>
+                                                  </TableView>
+                                              </children>
+                                          </AnchorPane>
+                                      </children>
+                                  </AnchorPane>
+                                  <AnchorPane fx:id="deleteTab" prefHeight="542.4" prefWidth="892.0" styleClass="anchor-pane-style" stylesheets="@../assets/styles/default.css" visible="false">
+                                      <children>
+                                          <AnchorPane layoutX="10.0" layoutY="14.0" prefHeight="450.0" prefWidth="870.0" styleClass="shadow-effect">
+                                              <children>
+                                                  <TableView fx:id="previewDeleteTable" layoutX="97.0" layoutY="38.0" prefHeight="450.0" prefWidth="617.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                      <columns>
+                                                          <TableColumn fx:id="deleteIDCol" editable="false" prefWidth="66.4000244140625" text="ID" />
+                                                          <TableColumn fx:id="deleteTitleCol" editable="false" minWidth="0.0" prefWidth="283.99993896484375" text="Title" />
+                                                          <TableColumn fx:id="deleteAlbumCol" editable="false" minWidth="0.0" prefWidth="200.0" text="Album" />
+                                                          <TableColumn fx:id="deleteArtistCol" editable="false" minWidth="0.0" prefWidth="200.0" text="Artist" />
+                                                          <TableColumn fx:id="deleteYearCol" editable="false" minWidth="0.0" prefWidth="120.0" text="Year" />
+                                                      </columns>
+                                                  </TableView>
+                                              </children>
+                                          </AnchorPane>
+                                          <AnchorPane layoutX="9.0" layoutY="476.0" prefHeight="56.0" prefWidth="870.0">
+                                              <children>
+                                                  <Button fx:id="deleteTabDeleteButton" layoutX="736.0" layoutY="12.0" mnemonicParsing="false" onAction="#deleteTabDeleteButtonOnAction" prefHeight="32.0" prefWidth="120.0" text="Delete" textAlignment="CENTER">
+                                                      <font>
+                                                          <Font name="System Bold" size="16.0" />
+                                                      </font>
+                                                  </Button>
+                                                  <TextField fx:id="deleteSearchBar" layoutY="12.0" prefHeight="32.0" prefWidth="320.0" promptText="Search" />
+                                              </children>
+                                          </AnchorPane>
+                                      </children>
+                                  </AnchorPane>
+                            </children>
+                        </AnchorPane>
+                    </center>
+                </BorderPane>
+            </children>
+        </AnchorPane>
+    </children>
+</StackPane>

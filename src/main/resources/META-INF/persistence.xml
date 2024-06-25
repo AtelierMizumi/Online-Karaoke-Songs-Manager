@@ -8,6 +8,7 @@
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <class>com.javafx.songmanager.models.UserInfo</class>
         <class>com.javafx.songmanager.models.Song</class>
+        <class>com.javafx.songmanager.models.SongPath</class>
         <properties>
             <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
             <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>

@@ -48,16 +48,26 @@ public class LoginController {
 
         if (!Validator.isValidUsername(username)) {
             System.out.println("Invalid username");
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Login unsuccessful");
+            alert.setHeaderText(null);
+            alert.setContentText("Invalid username");
+            alert.showAndWait();
             return false;
         } else if (!Validator.isValidPassword(password)) {
             System.out.println("Invalid password");
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Login unsuccessful");
+            alert.setHeaderText(null);
+            alert.setContentText("Invalid password");
+            alert.showAndWait();
             return false;
         }
 
         return true;
     };
 
-    void requestLogin(String username, String password) throws IOException {
+    void requestLogin(String username, String password) {
         System.out.println("Requesting login request to the server...");
 
         try {
@@ -65,22 +75,24 @@ public class LoginController {
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            out.println("LOGIN " + username + " " + password);
+            out.println("LOGIN|" + username + "|" + password);
 
             String response = in.readLine();
             // split the response
-            String[] parts = response.split(" ");
+            String[] parts = response.split("\\|");
 
             System.out.println("Server response: " + response);
             if (parts[0].equals("LOGIN_OK")) {
-                // Registration successful
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Login successful");
-                alert.setHeaderText(null);
-                alert.setContentText("User login successful!");
-                alert.showAndWait();
-                switchToUserApp(parts[1]);
-            } else if ("LOGIN_FAILED USER_NON_EXIST".equals(response)) {
+                System.out.println("User login successful");
+                System.out.println("User session id: " + parts[1]);
+                Stage stage = (Stage) usernameTextField.getScene().getWindow();
+                switchToUserApp(stage, parts[1]);
+            } else if (parts[0].equals("LOGIN_OK_ADMIN")) {
+                System.out.println("Admin login successful");
+                System.out.println("Admin session id: " + parts[1]);
+                Stage stage = (Stage) usernameTextField.getScene().getWindow();
+                switchToAdminApp(stage, parts[1]);
+            } else if ("LOGIN_FAILED|USER_NON_EXIST".equals(response)) {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("Login Failed");
                 alert.setHeaderText(null);
@@ -89,7 +101,7 @@ public class LoginController {
                 if (alert.getResult().getText().equals("OK")) {
                     switchToRegisterOnAction(new ActionEvent());
                 }
-            } else if ("LOGIN_FAILED PASSWORD_INCORRECT".equals(response)) {
+            } else if ("LOGIN_FAILED|PASSWORD_INCORRECT".equals(response)) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Login Failed");
                 alert.setHeaderText(null);
@@ -109,19 +121,29 @@ public class LoginController {
         }
     }
 
-    void switchToUserApp(String sessionId) {
-        // Get the current stage
-        Stage stage = (Stage) usernameTextField.getScene().getWindow();
-
-        // Load the app view
+    void switchToUserApp(Stage stage, String sessionId) {
+        // Load the user app view
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/javafx/songmanager/views/user-app.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/javafx/songmanager/views/user-app-view.fxml"));
+            UserAppController controller = new UserAppController();
+            controller.setClientSessionId(sessionId);
+            loader.setController(controller);
             Parent root = loader.load();
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-            // Get the AppController and set the sessionId
-            UserAppController appController = loader.getController();
-            appController.setSessionId(sessionId);
-
+    void switchToAdminApp(Stage stage, String sessionId) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/javafx/songmanager/views/admin-app-view.fxml"));
+            AdminAppController controller = new AdminAppController();
+            controller.setClientSessionId(sessionId);
+            loader.setController(controller);
+            Parent root = loader.load();
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.show();

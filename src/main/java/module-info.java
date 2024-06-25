@@ -16,7 +16,9 @@ module com.javafx.chatapp {
     requires jjwt.api;
     requires jjwt.impl;
     requires jjwt.jackson;
-    requires fontawesomefx;
+    requires org.kordamp.ikonli.fontawesome;
+    requires org.apache.commons.lang3;
+    requires java.desktop;
 
     opens com.javafx.songmanager to javafx.fxml;
     opens com.javafx.songmanager.models to org.hibernate.orm.core;

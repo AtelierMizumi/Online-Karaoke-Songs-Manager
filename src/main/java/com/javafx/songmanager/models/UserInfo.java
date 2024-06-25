@@ -18,16 +18,16 @@ public class UserInfo {
 
     private String password_salt;
 
-    private boolean is_admin_user;
+    private boolean admin;
 
     public UserInfo() {    }
 
-    public UserInfo(String email_Address, String username, String hashed_password, String password_salt, boolean is_admin) {
+    public UserInfo(String email_Address, String username, String hashed_password, String password_salt, boolean admin) {
         this.email_Address = email_Address;
         this.username = username;
         this.hashed_password = hashed_password;
         this.password_salt = password_salt;
-        this.is_admin_user = is_admin;
+        this.admin = admin;
     }
 
     public int getId() {
@@ -70,11 +70,19 @@ public class UserInfo {
         this.password_salt = password_salt;
     }
 
-    public boolean isIs_admin_user() {
-        return is_admin_user;
+    public String getEmail_Address() {
+        return email_Address;
     }
 
-    public void setIs_admin_user(boolean is_admin_user) {
-        this.is_admin_user = is_admin_user;
+    public void setEmail_Address(String email_Address) {
+        this.email_Address = email_Address;
+    }
+
+    public boolean isAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(boolean admin) {
+        this.admin = admin;
     }
 }

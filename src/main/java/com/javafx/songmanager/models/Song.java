@@ -6,7 +6,6 @@ import javax.persistence.*;
 @Table(name = "Song")
 public class Song {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     private String title;
@@ -15,19 +14,17 @@ public class Song {
 
     private String album;
 
-    private String released_year;
-
-    private String path;
+    private String releaseYear;
 
     public Song() {
     }
 
-    public Song(String title, String artist, String album, String released_year, String path) {
+    public Song(int id, String title, String artist, String album, String releaseYear) {
+        this.id = id;
         this.title = title;
         this.artist = artist;
         this.album = album;
-        this.released_year = released_year;
-        this.path = path;
+        this.releaseYear = releaseYear;
     }
 
     public int getId() {
@@ -62,19 +59,11 @@ public class Song {
         this.album = album;
     }
 
-    public String getReleased_year() {
-        return released_year;
+    public String getReleaseYear() {
+        return releaseYear;
     }
 
-    public void setReleased_year(String released_year) {
-        this.released_year = released_year;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
+    public void setReleaseYear(String releaseYear) {
+        this.releaseYear = releaseYear;
     }
 }
